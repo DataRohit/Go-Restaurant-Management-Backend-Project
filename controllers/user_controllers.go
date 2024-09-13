@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -77,5 +78,78 @@ func SignUp() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
+	}
+}
+
+func Login() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		var user models.User
+		var foundUser models.User
+
+		if err := c.ShouldBindJSON(&user); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		err := userCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+			return
+		}
+
+		passwordIsValid, msg := helper.VerifyPassword(*foundUser.Password, *user.Password)
+		if !passwordIsValid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": msg})
+			return
+		}
+
+		var accessToken, refreshToken string
+		var generateNewTokens bool
+
+		if err := helper.ValidateToken(*foundUser.AccessToken); err == nil {
+			accessToken = *foundUser.AccessToken
+		} else {
+			if err := helper.ValidateToken(*foundUser.RefreshToken); err == nil {
+				newAccessToken, err := helper.GenerateToken(*foundUser.Email, foundUser.UserID, 24*time.Hour)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating new access token"})
+					return
+				}
+				accessToken = newAccessToken
+			} else {
+				newAccessToken, newRefreshToken, err := helper.GenerateAllTokens(*foundUser.Email, *foundUser.FirstName, *foundUser.LastName, foundUser.UserID)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating tokens"})
+					return
+				}
+				accessToken = newAccessToken
+				refreshToken = newRefreshToken
+				generateNewTokens = true
+			}
+		}
+
+		if generateNewTokens {
+			err := helper.UpdateAllTokens(accessToken, refreshToken, foundUser.UserID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error updating tokens"})
+				return
+			}
+		} else {
+			err := helper.UpdateAccessToken(accessToken, foundUser.UserID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error updating access token"})
+				return
+			}
+			refreshToken = *foundUser.RefreshToken
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"user":         foundUser,
+			"accessToken":  accessToken,
+			"refreshToken": refreshToken,
+		})
 	}
 }

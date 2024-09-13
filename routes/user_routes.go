@@ -12,6 +12,7 @@ func UserRoutes(router *gin.Engine) {
 		users := api.Group("/users")
 		{
 			users.POST("/signup", controllers.SignUp())
+			users.POST("/login", controllers.Login())
 		}
 	}
 }
