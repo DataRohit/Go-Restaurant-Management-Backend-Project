@@ -11,6 +11,7 @@ import (
 
 	"github.com/datarohit/go-restaurant-management-backend-project/config"
 	"github.com/datarohit/go-restaurant-management-backend-project/middlewares"
+	"github.com/datarohit/go-restaurant-management-backend-project/routes"
 	"github.com/datarohit/go-restaurant-management-backend-project/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -33,6 +34,8 @@ func main() {
 
 	router.Use(middlewares.ZapLoggerMiddleware(log))
 	router.Use(gin.Recovery())
+
+	routes.HealthRoutes(router)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),

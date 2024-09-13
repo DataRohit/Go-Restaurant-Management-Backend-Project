@@ -1,0 +1,49 @@
+volumes:
+  local_mongo_data:
+    driver: local
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: restaurant-management-server
+    container_name: restaurant-management-server
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.envs/.server.env
+    networks:
+      - restaurant-management-network
+    healthcheck:
+      test: [ "CMD", "/app/healthCheck.sh" ]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
+
+  mongo:
+    image: mongo:latest
+    container_name: restaurant-management-mongo
+    restart: always
+    env_file:
+      - ./.envs/.mongo.env
+    volumes:
+      - local_mongo_data:/data/db
+    networks:
+      - restaurant-management-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+networks:
+  restaurant-management-network:
+    driver: bridge
