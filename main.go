@@ -36,6 +36,7 @@ func main() {
 	router.Use(gin.Recovery())
 
 	routes.HealthRoutes(router)
+	routes.UserRoutes(router)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
