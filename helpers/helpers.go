@@ -11,3 +11,10 @@ func RecordExists(ctx context.Context, collection *mongo.Collection, field strin
 	count, err := collection.CountDocuments(ctx, bson.M{field: value})
 	return count > 0, err
 }
+
+func GetNonNilString(s *string, defaultValue string) string {
+	if s == nil || *s == "" {
+		return defaultValue
+	}
+	return *s
+}

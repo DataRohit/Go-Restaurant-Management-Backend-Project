@@ -63,7 +63,7 @@ func SignUp() gin.HandlerFunc {
 		user.ID = primitive.NewObjectID()
 		user.UserID = user.ID.Hex()
 
-		accessToken, refreshToken, err := helper.GenerateAllTokens(*user.Email, *user.FirstName, *user.LastName, user.UserID)
+		accessToken, refreshToken, err := helper.GenerateAllTokens(*(user.Email), *(user.FirstName), *(user.LastName), user.UserID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating tokens"})
 			return
@@ -87,16 +87,18 @@ func Login() gin.HandlerFunc {
 		defer cancel()
 
 		var user models.User
-		var foundUser models.User
-
 		if err := c.ShouldBindJSON(&user); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 			return
 		}
 
+		var foundUser models.User
 		err := userCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser)
-		if err != nil {
+		if err == mongo.ErrNoDocuments {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+			return
+		} else if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
 		}
 
@@ -107,18 +109,21 @@ func Login() gin.HandlerFunc {
 		}
 
 		var accessToken, refreshToken string
-		var generateNewTokens bool
+		var updateTokens bool
 
-		if err := helper.ValidateToken(*foundUser.AccessToken); err == nil {
+		if foundUser.AccessToken != nil && helper.ValidateToken(*foundUser.AccessToken) == nil {
 			accessToken = *foundUser.AccessToken
+			refreshToken = *foundUser.RefreshToken
 		} else {
-			if err := helper.ValidateToken(*foundUser.RefreshToken); err == nil {
-				newAccessToken, err := helper.GenerateToken(*foundUser.Email, foundUser.UserID, 24*time.Hour)
+			if foundUser.RefreshToken != nil && helper.ValidateToken(*foundUser.RefreshToken) == nil {
+				newAccessToken, err := helper.GenerateToken(*foundUser.Email, foundUser.UserID, 2*time.Minute)
 				if err != nil {
 					c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating new access token"})
 					return
 				}
 				accessToken = newAccessToken
+				refreshToken = *foundUser.RefreshToken
+				updateTokens = true
 			} else {
 				newAccessToken, newRefreshToken, err := helper.GenerateAllTokens(*foundUser.Email, *foundUser.FirstName, *foundUser.LastName, foundUser.UserID)
 				if err != nil {
@@ -127,23 +132,16 @@ func Login() gin.HandlerFunc {
 				}
 				accessToken = newAccessToken
 				refreshToken = newRefreshToken
-				generateNewTokens = true
+				updateTokens = true
 			}
 		}
 
-		if generateNewTokens {
+		if updateTokens {
 			err := helper.UpdateAllTokens(accessToken, refreshToken, foundUser.UserID)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error updating tokens"})
 				return
 			}
-		} else {
-			err := helper.UpdateAccessToken(accessToken, foundUser.UserID)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error updating access token"})
-				return
-			}
-			refreshToken = *foundUser.RefreshToken
 		}
 
 		c.JSON(http.StatusOK, gin.H{
@@ -151,5 +149,35 @@ func Login() gin.HandlerFunc {
 			"accessToken":  accessToken,
 			"refreshToken": refreshToken,
 		})
+	}
+}
+
+func GetUserByID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		userId := c.Param("userId")
+		if userId == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "userId is required"})
+			return
+		}
+
+		var user models.User
+		err := userCollection.FindOne(ctx, bson.M{"userId": userId}).Decode(&user)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			}
+			return
+		}
+
+		user.Password = nil
+		user.AccessToken = nil
+		user.RefreshToken = nil
+
+		c.JSON(http.StatusOK, gin.H{"user": user})
 	}
 }

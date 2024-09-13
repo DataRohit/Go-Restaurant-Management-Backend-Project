@@ -33,6 +33,8 @@ services:
     restart: always
     env_file:
       - ./.envs/.mongo.env
+    ports:
+      - "27017:27017"
     volumes:
       - local_mongo_data:/data/db
     networks:
