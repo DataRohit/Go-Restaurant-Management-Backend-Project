@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
+	"github.com/datarohit/go-restaurant-management-backend-project/config"
 	"github.com/datarohit/go-restaurant-management-backend-project/database"
+	"github.com/datarohit/go-restaurant-management-backend-project/models"
 	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,7 +26,7 @@ type SignedDetails struct {
 
 var (
 	userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")
-	JWT_SECRET     string            = os.Getenv("JWT_SECRET")
+	JWT_SECRET     string            = config.GetEnv("JWT_SECRET", "not-so-secret")
 )
 
 func GenerateAllTokens(email, firstName, lastName, uid string) (string, string, error) {
@@ -128,4 +129,25 @@ func UpdateAccessToken(signedAccessToken, userId string) error {
 		return err
 	}
 	return nil
+}
+
+func GetOrGenerateTokens(user models.User) (string, string, error) {
+	if user.AccessToken != nil && ValidateToken(*user.AccessToken) == nil {
+		return *user.AccessToken, *user.RefreshToken, nil
+	}
+
+	if user.RefreshToken != nil && ValidateToken(*user.RefreshToken) == nil {
+		newAccessToken, err := GenerateToken(*user.Email, user.UserID, 2*time.Minute)
+		if err != nil {
+			return "", "", err
+		}
+		return newAccessToken, *user.RefreshToken, nil
+	}
+
+	newAccessToken, newRefreshToken, err := GenerateAllTokens(*user.Email, *user.FirstName, *user.LastName, user.UserID)
+	if err != nil {
+		return "", "", err
+	}
+
+	return newAccessToken, newRefreshToken, nil
 }

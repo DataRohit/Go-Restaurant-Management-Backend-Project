@@ -2,7 +2,9 @@ package helpers
 
 import (
 	"context"
+	"strconv"
 
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -17,4 +19,18 @@ func GetNonNilString(s *string, defaultValue string) string {
 		return defaultValue
 	}
 	return *s
+}
+
+func GetPaginationParams(c *gin.Context) (int64, int64) {
+	recordPerPage, err := strconv.ParseInt(c.Query("recordPerPage"), 10, 64)
+	if err != nil || recordPerPage < 1 {
+		recordPerPage = 10
+	}
+
+	page, err := strconv.ParseInt(c.Query("page"), 10, 64)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	return recordPerPage, page
 }
