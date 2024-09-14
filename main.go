@@ -42,6 +42,7 @@ func main() {
 
 	routes.MenuRoutes(router)
 	routes.FoodRoutes(router)
+	routes.TableRoutes(router)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
