@@ -124,7 +124,7 @@ func UpdateMenuByID() gin.HandlerFunc {
 		var updateObj primitive.D
 
 		if menu.StartDate != nil && menu.EndDate != nil {
-			if !helper.InTimeSpan(*menu.StartDate, *menu.EndDate, time.Now()) {
+			if !helper.InTimeSpan(*menu.StartDate, *menu.EndDate, time.Now().UTC()) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Start date must be before end date"})
 				return
 			}
@@ -144,7 +144,7 @@ func UpdateMenuByID() gin.HandlerFunc {
 			return
 		}
 
-		menu.UpdatedAt = time.Now()
+		menu.UpdatedAt = time.Now().UTC()
 		updateObj = append(updateObj, bson.E{Key: "updated_at", Value: menu.UpdatedAt})
 
 		filter := bson.M{"menuId": menuId}

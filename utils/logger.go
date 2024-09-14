@@ -33,7 +33,7 @@ func LogRequest(r *http.Request, traceID string) {
 		zap.String("url", r.URL.Path),
 		zap.String("remote_addr", r.RemoteAddr),
 		zap.String("trace_id", traceID),
-		zap.Time("timestamp", time.Now()),
+		zap.Time("timestamp", time.Now().UTC()),
 	)
 }
 
@@ -45,7 +45,7 @@ func LogError(r *http.Request, traceID, msg string, err error) {
 		zap.String("trace_id", traceID),
 		zap.String("message", msg),
 		zap.Error(err),
-		zap.Time("timestamp", time.Now()),
+		zap.Time("timestamp", time.Now().UTC()),
 	)
 }
 

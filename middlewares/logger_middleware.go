@@ -9,7 +9,7 @@ import (
 
 func ZapLoggerMiddleware(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		start := time.Now()
+		start := time.Now().UTC()
 
 		c.Next()
 

@@ -44,7 +44,7 @@ func SignUp() gin.HandlerFunc {
 		user.Password = helper.HashPassword(user.Password)
 		user.ID = primitive.NewObjectID()
 		user.UserID = user.ID.Hex()
-		user.CreatedAt = time.Now()
+		user.CreatedAt = time.Now().UTC()
 		user.UpdatedAt = user.CreatedAt
 
 		accessToken, refreshToken, err := helper.GenerateAllTokens(*user.Email, *user.FirstName, *user.LastName, user.UserID)
