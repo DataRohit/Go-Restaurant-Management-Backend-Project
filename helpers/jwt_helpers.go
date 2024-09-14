@@ -26,6 +26,7 @@ type SignedDetails struct {
 
 var (
 	userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")
+	foodCollection *mongo.Collection = database.OpenCollection(database.Client, "food")
 	JWT_SECRET     string            = config.GetEnv("JWT_SECRET", "not-so-secret")
 )
 

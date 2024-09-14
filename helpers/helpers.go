@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"math"
 	"strconv"
 	"time"
 
@@ -38,4 +39,13 @@ func GetPaginationParams(c *gin.Context) (int64, int64) {
 
 func InTimeSpan(start, end, check time.Time) bool {
 	return !check.Before(start) && !check.After(end)
+}
+
+func Round(num float64) int {
+	return int(num + math.Copysign(0.5, num))
+}
+
+func ToFixed(num float64, precision int) float64 {
+	output := math.Pow(10, float64(precision))
+	return float64(Round(num*output)) / output
 }
