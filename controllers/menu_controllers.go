@@ -8,6 +8,7 @@ import (
 	"github.com/datarohit/go-restaurant-management-backend-project/database"
 	"github.com/datarohit/go-restaurant-management-backend-project/models"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -42,5 +43,27 @@ func CreateMenu() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "Menu item created successfully", "menu": menu})
+	}
+}
+
+func GetAllMenus() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		cursor, err := menuCollection.Find(ctx, bson.M{})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve menu items"})
+			return
+		}
+		defer cursor.Close(ctx)
+
+		var menus []bson.M
+		if err := cursor.All(ctx, &menus); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error while parsing menu items"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"menus": menus})
 	}
 }

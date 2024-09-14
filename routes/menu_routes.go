@@ -12,6 +12,7 @@ func MenuRoutes(router *gin.Engine) {
 		menus := api.Group("/menus")
 		{
 			menus.POST("/", controllers.CreateMenu())
+			menus.GET("/", controllers.GetAllMenus())
 		}
 	}
 }
