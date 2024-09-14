@@ -105,9 +105,8 @@ func Login() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"user":         foundUser,
-			"accessToken":  accessToken,
-			"refreshToken": refreshToken,
+			"message": "User logged in successfully",
+			"user":    foundUser,
 		})
 	}
 }

@@ -53,6 +53,12 @@ func GetAllMenus() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
+		totalCount, err := menuCollection.CountDocuments(ctx, bson.M{})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count menu items"})
+			return
+		}
+
 		cursor, err := menuCollection.Find(ctx, bson.M{})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve menu items"})
@@ -60,13 +66,16 @@ func GetAllMenus() gin.HandlerFunc {
 		}
 		defer cursor.Close(ctx)
 
-		var menus []bson.M
+		var menus []models.Menu
 		if err := cursor.All(ctx, &menus); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error while parsing menu items"})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"menus": menus})
+		c.JSON(http.StatusOK, gin.H{
+			"totalCount": totalCount,
+			"menus":      menus,
+		})
 	}
 }
 
