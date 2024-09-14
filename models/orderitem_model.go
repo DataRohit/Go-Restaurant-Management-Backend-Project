@@ -12,7 +12,7 @@ type OrderItem struct {
 	UnitPrice   *float64           `json:"unitPrice" bson:"unitPrice" validate:"required"`
 	CreatedAt   time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedAt   time.Time          `json:"updatedAt" bson:"updatedAt"`
-	FoodId      *string            `json:"foodId" bson:"foodId" validate:"required"`
-	OrderItemId string             `json:"orderItemId" bson:"orderItemId"`
-	OrderId     string             `json:"orderId" bson:"orderId" validate:"required"`
+	FoodID      *string            `json:"foodId" bson:"foodId" validate:"required"`
+	OrderItemID string             `json:"orderItemId" bson:"orderItemId"`
+	OrderID     string             `json:"orderId" bson:"orderId" validate:"required"`
 }

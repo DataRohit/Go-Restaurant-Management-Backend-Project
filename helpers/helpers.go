@@ -6,9 +6,17 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/datarohit/go-restaurant-management-backend-project/database"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+)
+
+var (
+	userCollection      *mongo.Collection = database.OpenCollection(database.Client, "user")
+	foodCollection      *mongo.Collection = database.OpenCollection(database.Client, "food")
+	orderCollection     *mongo.Collection = database.OpenCollection(database.Client, "order")
+	orderItemCollection *mongo.Collection = database.OpenCollection(database.Client, "orderItem")
 )
 
 func RecordExists(ctx context.Context, collection *mongo.Collection, field string, value interface{}) (bool, error) {

@@ -8,11 +8,9 @@ import (
 	"time"
 
 	"github.com/datarohit/go-restaurant-management-backend-project/config"
-	"github.com/datarohit/go-restaurant-management-backend-project/database"
 	"github.com/datarohit/go-restaurant-management-backend-project/models"
 	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -24,11 +22,7 @@ type SignedDetails struct {
 	jwt.StandardClaims
 }
 
-var (
-	userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")
-	foodCollection *mongo.Collection = database.OpenCollection(database.Client, "food")
-	JWT_SECRET     string            = config.GetEnv("JWT_SECRET", "not-so-secret")
-)
+var JWT_SECRET string = config.GetEnv("JWT_SECRET", "not-so-secret")
 
 func GenerateAllTokens(email, firstName, lastName, uid string) (string, string, error) {
 	if JWT_SECRET == "" {
