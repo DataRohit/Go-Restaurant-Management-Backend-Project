@@ -80,3 +80,29 @@ func GetAllFoodItems() gin.HandlerFunc {
 		})
 	}
 }
+
+func GetFoodByID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		foodID := c.Param("foodId")
+		if foodID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "foodId parameter is required"})
+			return
+		}
+
+		var food models.Food
+		err := foodCollection.FindOne(ctx, bson.M{"foodId": foodID}).Decode(&food)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Food item not found"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occurred while fetching the food item"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"food": food})
+	}
+}

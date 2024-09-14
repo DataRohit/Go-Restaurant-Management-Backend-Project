@@ -13,6 +13,7 @@ func FoodRoutes(router *gin.Engine) {
 		{
 			foods.POST("/", controllers.CreateFood())
 			foods.GET("/", controllers.GetAllFoodItems())
+			foods.GET("/:foodId", controllers.GetFoodByID())
 		}
 	}
 }
