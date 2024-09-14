@@ -6,8 +6,8 @@ services:
   server:
     build:
       context: .
-      dockerfile: Dockerfile
-    image: restaurant-management-server
+      dockerfile: ./dockerfile
+    image: restaurant-management-server:master
     container_name: restaurant-management-server
     depends_on:
       mongo:
