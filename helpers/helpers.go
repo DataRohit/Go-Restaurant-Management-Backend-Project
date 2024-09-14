@@ -3,6 +3,7 @@ package helpers
 import (
 	"context"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -33,4 +34,8 @@ func GetPaginationParams(c *gin.Context) (int64, int64) {
 	}
 
 	return recordPerPage, page
+}
+
+func InTimeSpan(start, end, check time.Time) bool {
+	return !check.Before(start) && !check.After(end)
 }

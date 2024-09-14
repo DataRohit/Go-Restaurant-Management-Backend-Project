@@ -13,6 +13,8 @@ func MenuRoutes(router *gin.Engine) {
 		{
 			menus.POST("/", controllers.CreateMenu())
 			menus.GET("/", controllers.GetAllMenus())
+			menus.GET("/:menuId", controllers.GetMenuByID())
+			menus.PATCH("/:menuId", controllers.UpdateMenuByID())
 		}
 	}
 }
