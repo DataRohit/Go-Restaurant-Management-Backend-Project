@@ -45,6 +45,7 @@ func main() {
 	routes.TableRoutes(router)
 	routes.OrderRoutes(router)
 	routes.OrderItemRoutes(router)
+	routes.InvoiceRoutes(router)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
