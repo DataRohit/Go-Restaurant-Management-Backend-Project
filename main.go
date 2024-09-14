@@ -40,6 +40,8 @@ func main() {
 
 	router.Use(middlewares.Authentication())
 
+	routes.MenuRoutes(router)
+
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: router,

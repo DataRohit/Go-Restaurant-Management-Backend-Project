@@ -94,10 +94,12 @@ func ValidateToken(tokenStr string) error {
 	return err
 }
 
-func GenerateToken(email, uid string, duration time.Duration) (string, error) {
+func GenerateToken(email, firstName, lastName, uid string, duration time.Duration) (string, error) {
 	claims := &SignedDetails{
-		Email: email,
-		UID:   uid,
+		Email:     email,
+		FirstName: firstName,
+		LastName:  lastName,
+		UID:       uid,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(duration).Unix(),
 		},
@@ -137,7 +139,7 @@ func GetOrGenerateTokens(user models.User) (string, string, error) {
 	}
 
 	if user.RefreshToken != nil && ValidateToken(*user.RefreshToken) == nil {
-		newAccessToken, err := GenerateToken(*user.Email, user.UserID, 2*time.Minute)
+		newAccessToken, err := GenerateToken(*user.Email, *user.FirstName, *user.LastName, user.UserID, 6*time.Hour)
 		if err != nil {
 			return "", "", err
 		}

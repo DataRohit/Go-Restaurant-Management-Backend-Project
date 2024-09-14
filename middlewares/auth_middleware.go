@@ -18,7 +18,7 @@ func Authentication() gin.HandlerFunc {
 			return
 		}
 
-		token, err := jwt.Parse(clientToken, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(clientToken, &helper.SignedDetails{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
